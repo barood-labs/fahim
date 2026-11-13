@@ -1,0 +1,5 @@
+{
+  "appCheckSiteKey": "",
+  "appCheckProvider": "enterprise",
+  "geminiModel": "gemini-3.5-flash-lite"
+}
