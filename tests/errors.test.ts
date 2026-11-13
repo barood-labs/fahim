@@ -7,6 +7,9 @@ import { samples } from "../src/samples";
 describe("classifyError", () => {
   it("recognizes quota, App Check, and Nano failures", () => {
     expect(classifyError(new Error("429 resource_exhausted"))).toBe("quota");
+    expect(classifyError(new Error(
+      "Error fetching from https://firebasevertexai.googleapis.com/v1beta/projects/fahim-hybridai/models/gemini-3.5-flash-lite:generateContent: [403 Forbidden] The Gemini API free tier is not available for this project.",
+    ))).toBe("free_tier");
     expect(classifyError(new Error("App Check token is invalid"))).toBe("app_check");
     expect(classifyError(new Error("Local LanguageModel API not available in this environment."))).toBe("nano");
     expect(classifyError(new Error("Failed to fetch"))).toBe("offline");

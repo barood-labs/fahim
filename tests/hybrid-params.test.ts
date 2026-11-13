@@ -20,6 +20,16 @@ describe("buildHybridParams", () => {
     expect(params.inCloudParams?.tools).toBeUndefined();
   });
 
+  it("sends Arabic and English through the same cloud model", () => {
+    const english = buildHybridParams({ sdkMode: "prefer_on_device", allowArabic: false });
+    const arabic = buildHybridParams({ sdkMode: "only_in_cloud", allowArabic: true });
+    expect(arabic.inCloudParams?.model).toBe(english.inCloudParams?.model);
+    expect(arabic.inCloudParams?.model).toBe("gemini-3.5-flash-lite");
+    expect(arabic.inCloudParams?.systemInstruction).toBe(english.inCloudParams?.systemInstruction);
+    expect(arabic.inCloudParams?.tools).toBeUndefined();
+    expect(english.inCloudParams?.tools).toBeUndefined();
+  });
+
   it("asks the cloud schema for Arabic only when the route allows it", () => {
     const english = buildHybridParams({ sdkMode: "only_on_device", allowArabic: false });
     const arabic = buildHybridParams({ sdkMode: "only_in_cloud", allowArabic: true });

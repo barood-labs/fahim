@@ -16,6 +16,7 @@ The production build already includes the reCAPTCHA Enterprise site key (`src/ap
 - [ ] Load the **School trip** sample and press **Explain this notice**.
 - [ ] A reading comes back. `inferenceSource` is `in_cloud` or `on_device`. It is not `not-called`.
 - [ ] There is no App Check error. If there is, stop. Check that both Hosting domains are on the Enterprise key, then try again. Do not enforce yet.
+- [ ] If the page says the Gemini API free tier is not available (HTTP 403), stop. That response is the same for Arabic and English. It is not fixed by enforcing App Check, and linking billing leaves the free tier. See Google AI Studio for this project’s free-tier status.
 
 ## 3. Enforce Firebase AI Logic
 
