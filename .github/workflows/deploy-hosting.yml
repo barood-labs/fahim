@@ -1,0 +1,53 @@
+# Deploys Firebase Hosting for fahim-hybridai after a push to main.
+# This workflow does not run on pull requests, so a missing secret cannot fail PR CI.
+#
+# Secret to create (Spark plan, no billing account):
+#   Name: FIREBASE_TOKEN
+#   How:  npx firebase-tools@latest login:ci
+#         Sign in as an owner of fahim-hybridai. The command prints a token.
+#         GitHub → Settings → Secrets and variables → Actions → New repository secret.
+#         Paste the token. Do not commit it. If the browser asks to link billing
+#         or upgrade to Blaze, cancel.
+# firebase-tools also accepts a service-account JSON in the secret
+# FIREBASE_SERVICE_ACCOUNT (Firebase Hosting Admin). Prefer FIREBASE_TOKEN.
+# Creating either secret does not require a Cloud Billing account.
+
+name: Deploy Hosting
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - name: Deploy to Firebase Hosting
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          if [ -n "${FIREBASE_TOKEN}" ]; then
+            npx --yes firebase-tools@latest deploy --only hosting --project fahim-hybridai --non-interactive --token "${FIREBASE_TOKEN}"
+          elif [ -n "${FIREBASE_SERVICE_ACCOUNT}" ]; then
+            key_file="${RUNNER_TEMP}/firebase-sa.json"
+            printf '%s' "${FIREBASE_SERVICE_ACCOUNT}" > "${key_file}"
+            export GOOGLE_APPLICATION_CREDENTIALS="${key_file}"
+            npx --yes firebase-tools@latest deploy --only hosting --project fahim-hybridai --non-interactive
+            rm -f "${key_file}"
+          else
+            echo "Add the FIREBASE_TOKEN repository secret. See the comment at the top of this workflow."
+            exit 1
+          fi

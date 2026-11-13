@@ -1,3 +1,4 @@
+import { appCheckPublicConfig } from "./app-check-public";
 import { firebasePublicConfig } from "./firebase-public-config";
 
 export const DEFAULT_CLOUD_MODEL = "gemini-3.5-flash-lite";
@@ -80,9 +81,11 @@ export function resolveDebugToken(options: {
 export function appCheckFromEnv(env: ImportMetaEnv = import.meta.env): AppCheckSettings {
   const dev = Boolean(env.DEV);
   const allowDebugInProd = env.VITE_APPCHECK_ALLOW_DEBUG === "true";
+  const envSiteKey = clean(env.VITE_APPCHECK_SITE_KEY);
+  const envProvider = clean(env.VITE_APPCHECK_PROVIDER);
   return {
-    provider: resolveProviderKind(env.VITE_APPCHECK_PROVIDER),
-    siteKey: clean(env.VITE_APPCHECK_SITE_KEY),
+    provider: envProvider ? resolveProviderKind(envProvider) : appCheckPublicConfig.provider,
+    siteKey: envSiteKey || appCheckPublicConfig.siteKey,
     debugToken: resolveDebugToken({
       existing: typeof window === "undefined" ? undefined : window.FIREBASE_APPCHECK_DEBUG_TOKEN,
       dev,

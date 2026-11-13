@@ -65,7 +65,7 @@ AI Logic must stay on the **Gemini Developer API**. Do not switch the provider t
 
 Optional env overrides are listed in `.env.example`. Copy it to `.env`. `.env` is gitignored.
 
-You can also put a public site key in `public/config.json` (gitignored; see `public/config.example.json`). If that file contains `appCheckDebugToken` or `debugToken`, Fahim ignores it and shows a warning. Debug tokens do not belong in a file that Hosting would deploy.
+The reCAPTCHA Enterprise site key is committed in `src/app-check-public.ts` and `public/config.json`. The production bundle imports the TypeScript module, so a missing `config.json` fetch still uses Enterprise. If either file contains `appCheckDebugToken` or `debugToken`, Fahim ignores it and shows a warning.
 
 ## App Check
 
@@ -84,35 +84,13 @@ Firebase AI Logic requires App Check. This repo never contains a debug token.
 
 Production builds ignore `VITE_APPCHECK_DEBUG_TOKEN` unless you also set `VITE_APPCHECK_ALLOW_DEBUG=true`. Do not set that for a public deploy. Firebase’s own docs say not to ship a debug token or a debug build.
 
-### Hosted site: reCAPTCHA Enterprise (recommended)
+### Hosted site: reCAPTCHA Enterprise
 
-Use **reCAPTCHA Enterprise**, not classic reCAPTCHA v3.
+The web app is registered with reCAPTCHA Enterprise, a 1-day token TTL, and no billing account. The site key is in the repo. Firebase AI Logic is still **Unenforced**. Enforce it only after the hosted site answers a notice. The steps are in [docs/LAUNCH.md](docs/LAUNCH.md).
 
-Firebase’s current App Check page lists **reCAPTCHA Enterprise** as the web provider. The v3 guide says to use Enterprise for new integrations and says classic v3 is the older path. The console warning you saw, asking for a secret key and saying classic reCAPTCHA is deprecated, is that older path. Skip it. Enterprise does not put a secret in the app. The client only receives a site key. The secret key classic v3 asked for would live in the Firebase console; you do not need that flow.
+Leave replay protection off. This app sends ordinary App Check tokens. Spark stays on the no-cost Enterprise quota (10,000 assessments a month) and the default risk threshold of 0.5. Do not upgrade to Blaze for more score levels.
 
-Enterprise on the **Spark** plan, from Firebase’s provider doc:
-
-- No-cost for **10,000 assessments per month**. Above that, the docs say the project is charged. Do not link billing to “cover” that. Keep the token TTL at the default **1 day** so a demo cannot refresh tokens all afternoon. A judge session is nowhere near 10,000.
-- Spark only exposes score levels 0.1, 0.3, 0.7, and 0.9. Leave the app risk threshold at the default **0.5**. Do not upgrade to Blaze to unlock the other scores.
-
-Steps:
-
-1. Stay on Spark. If a screen tells you to upgrade to Blaze or link a billing account, cancel.
-2. Open the reCAPTCHA Enterprise key page for this project: [Google Cloud Fraud Defense / reCAPTCHA](https://console.cloud.google.com/security/recaptcha?project=fahim-hybridai). Confirm the project picker says `fahim-hybridai`.
-3. If asked to enable the reCAPTCHA Enterprise API, enable it. If enabling it requires a billing account, stop. Use the debug provider for local judging instead. The contest accepts debug tokens. Do not add a card.
-4. **Create key**. Display name: `Fahim web`. Application type: **Website**. Leave **Use checkbox challenge** off. App Check needs a score-based key, which stays invisible.
-5. Leave domain verification on. Add the domains you will actually serve:
-   - `fahim-hybridai.web.app`
-   - `fahim-hybridai.firebaseapp.com`
-   - a custom domain, if you have one
-6. Do **not** add `localhost`. Localhost uses the debug token. Do not mark the key as a testing-only key if this is the public site.
-7. Create the key and copy the **site key**.
-8. Firebase console → **Security → App Check → Apps**. Register the existing web app (`appId` `1:852643874067:web:0dca5a4cf11e672fba46e6`) with provider **reCAPTCHA Enterprise**. Paste the site key. Leave TTL at 1 day.
-9. **Security → App Check → APIs**. Firebase AI Logic should be **Enforced**. Leave **replay protection disabled**. This app uses ordinary App Check tokens, not limited-use tokens. Replay protection rejects those ordinary tokens.
-10. Put the site key in `.env` as `VITE_APPCHECK_SITE_KEY`, or in `public/config.json` as `appCheckSiteKey`. Leave `VITE_APPCHECK_PROVIDER` as `enterprise` (the default). `v3` exists only if you already hold a classic key.
-11. `npm run build`, then deploy. The header chip should read **App Check · reCAPTCHA Enterprise**.
-
-The site key is public by design. It is safe to put it in `.env` at build time or in `config.json`. It is not a debug token and not a Gemini key.
+`localhost` is not on the Enterprise key. Local explaining still needs the debug token above. A production build does not turn debug mode on.
 
 ## Judges: turn on Gemini Nano
 
@@ -135,9 +113,28 @@ Then, in Fahim:
 
 If Nano is missing, Auto still answers from the cloud and the badge says the SDK fell back. That is a successful hybrid outcome, not a failure of the page.
 
-A hosted build with no site key yet will refuse live calls until App Check is configured. Practice mode (`?practice=1`) shows the desk without a model. Do not judge practice mode as the AI.
+Practice mode (`?practice=1`) shows the desk without a model. Do not judge practice mode as the AI. The hosted site should show **App Check · reCAPTCHA Enterprise**.
 
 ## Deploy (Spark, no billing)
+
+A push to `main` runs `.github/workflows/deploy-hosting.yml`. Pull requests do not run it, so PR checks stay green before the secret exists.
+
+The secret to create is **`FIREBASE_TOKEN`**. It does not need a billing account or the Blaze plan.
+
+1. On your machine, while signed in as an owner of `fahim-hybridai`:
+
+   ```bash
+   npx firebase-tools@latest login:ci
+   ```
+
+2. A browser opens. Sign in. If it asks you to link Cloud Billing or upgrade to Blaze, cancel. The command prints a refresh token in the terminal.
+3. GitHub → **Settings → Secrets and variables → Actions → New repository secret**.
+4. Name: `FIREBASE_TOKEN`. Value: that token. Do not commit it, and do not put it in `.env`.
+5. Push to `main`, or re-run the **Deploy Hosting** workflow. It builds this repo and runs `firebase deploy --only hosting --project fahim-hybridai`.
+
+`login:ci` is the Spark path. A service-account JSON also works, with no billing account, if you cannot use `login:ci`. Create a key only for a principal that already has **Firebase Hosting Admin** on `fahim-hybridai`, store the whole JSON as the repository secret `FIREBASE_SERVICE_ACCOUNT`, and refuse any screen that asks for a billing account. The workflow uses `FIREBASE_TOKEN` when it is set, and the service account only when the token secret is empty. Prefer the token. Google Cloud often blocks new service-account keys.
+
+You can still deploy by hand:
 
 ```bash
 npm run build
@@ -148,7 +145,7 @@ npx firebase-tools@latest deploy --only hosting --project fahim-hybridai
 
 Before the first deploy, confirm in the Firebase console that the plan is Spark and that no Cloud Billing account is linked. Firebase Hosting’s product page lists 10 GB of stored content and up to 360 MB/day of transfer at no cost. The Hosting usage docs say a project that is not on Blaze cannot deploy once stored content passes the no-cost storage limit. This site is far under that. Recheck the pricing page before you deploy, and do not upgrade if a quota warning appears. Delete an old preview instead.
 
-There is no Firestore, Auth, Functions, or Analytics in this app. Do not enable them for the demo.
+There is no Firestore, Auth, Functions, or Analytics in this app. Do not enable them for the demo. After the site answers a notice, follow [docs/LAUNCH.md](docs/LAUNCH.md) to enforce App Check for AI Logic.
 
 ## Samples
 
@@ -160,8 +157,10 @@ Four fictional notices are built in: a school field trip, a rent adjustment, a f
 - `src/engine/hybrid-params.ts` — SDK mode, schema, Nano languages.
 - `src/domain/route.ts` — which mode is requested, and why.
 - `src/app/create-app.ts` — the desk UI.
+- `src/app-check-public.ts` — the committed Enterprise site key.
 - `docs/DEMO_SCRIPT.md` — a video script under three minutes.
 - `docs/SUBMISSION.md` — Devpost text.
+- `docs/LAUNCH.md` — enforce App Check after the hosted site works.
 
 License: [Apache-2.0](LICENSE).
 

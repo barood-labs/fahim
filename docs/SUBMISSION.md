@@ -31,7 +31,7 @@ Every live reading is a single `generateContent` call. On-device Nano cannot hol
 - Firebase AI Logic Web SDK (`firebase` 12.19), `GoogleAIBackend`, hybrid `InferenceMode`.
 - `initializeDeviceModel()` runs from a click, with a visible download progress, because the first Nano download can take minutes and must follow a user gesture.
 - Structured JSON for the summary, actions, dates, amounts, contacts, and reply.
-- Firebase App Check. Local judging uses a debug token from `VITE_APPCHECK_DEBUG_TOKEN` or `self.FIREBASE_APPCHECK_DEBUG_TOKEN`. The hosted app is meant to use a reCAPTCHA Enterprise site key. The debug token is not in the repo.
+- Firebase App Check with reCAPTCHA Enterprise. The public site key is in the repo. Local judging uses a debug token from `VITE_APPCHECK_DEBUG_TOKEN` or `self.FIREBASE_APPCHECK_DEBUG_TOKEN`. That token is not in the repo.
 - Firebase Hosting config for the Spark plan. No Cloud Billing account, no Blaze plan, no Google Account Quota.
 - IndexedDB for history. No login required to try it.
 

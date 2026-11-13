@@ -4,7 +4,6 @@ dist
 .env
 .env.*
 !.env.example
-public/config.json
 *.local
 .DS_Store
 coverage

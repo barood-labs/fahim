@@ -1,5 +1,8 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { mergeOverlay, resolveDebugToken, resolveFirebaseConfig, resolveProviderKind } from "../src/config";
+import { appCheckPublicConfig } from "../src/app-check-public";
+import { appCheckFromEnv, mergeOverlay, resolveDebugToken, resolveFirebaseConfig, resolveProviderKind } from "../src/config";
 import { firebasePublicConfig } from "../src/firebase-public-config";
 
 describe("firebase config seam", () => {
@@ -38,6 +41,20 @@ describe("App Check", () => {
       allowDebugInProd: false,
       envToken: "other",
     })).toBe("already-set");
+  });
+
+  it("uses the committed Enterprise site key when env is empty", () => {
+    const settings = appCheckFromEnv({} as ImportMetaEnv);
+    const published = JSON.parse(readFileSync(resolve("public/config.json"), "utf8")) as {
+      appCheckSiteKey: string;
+      appCheckProvider: string;
+    };
+    expect(settings.provider).toBe("enterprise");
+    expect(settings.siteKey).toBe("6Lfizh0uAAAAADl3HIjSFT7MlSJiJmhgZ9LMUXm4");
+    expect(settings.siteKey).toBe(appCheckPublicConfig.siteKey);
+    expect(published.appCheckSiteKey).toBe(appCheckPublicConfig.siteKey);
+    expect(published.appCheckProvider).toBe("enterprise");
+    expect(settings.debugToken).toBeUndefined();
   });
 
   it("defaults the provider to enterprise and ignores debug tokens in config.json", () => {
