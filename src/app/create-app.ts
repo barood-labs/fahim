@@ -43,6 +43,7 @@ const ERROR_KEY: Record<ErrorCode, CopyKey> = {
   empty: "errorEmpty",
   too_long: "errorTooLong",
   quota: "errorQuota",
+  free_tier: "errorFreeTier",
   app_check: "errorAppCheck",
   nano: "errorNano",
   offline: "errorOffline",

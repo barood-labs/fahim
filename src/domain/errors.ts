@@ -2,6 +2,7 @@ export type ErrorCode =
   | "empty"
   | "too_long"
   | "quota"
+  | "free_tier"
   | "app_check"
   | "nano"
   | "offline"
@@ -14,6 +15,9 @@ export function classifyError(error: unknown): ErrorCode {
   if (!message) return "unknown";
   if (message.includes("429") || message.includes("resource_exhausted") || message.includes("resource exhausted") || message.includes("quota") || message.includes("rate limit")) {
     return "quota";
+  }
+  if (message.includes("free tier is not available") || message.includes("free tier unavailable") || message.includes("free_tier")) {
+    return "free_tier";
   }
   if (
     message.includes("app check") ||
