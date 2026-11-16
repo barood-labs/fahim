@@ -128,7 +128,23 @@ button { cursor: pointer; }
 .banner p { margin: 0; }
 .banner-practice { background: var(--amber-soft); }
 .banner-warn { background: var(--rose-soft); }
-.banner-queue { background: var(--sea-soft); }
+.banner-queue {
+  background: #1d3f6e;
+  color: #f7f1e8;
+  border-color: #1d3f6e;
+  align-items: stretch;
+}
+.banner-queue .kicker { color: #f4d7a1; }
+.banner-queue .fine { color: #d5e2f5; }
+.banner-queue button { color: #1d3f6e; background: #f7f1e8; }
+.banner-queue .text-btn { background: transparent; color: #f7f1e8; }
+.queue-preview {
+  margin: 8px 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 250, 243, 0.12);
+  font-size: 1.05rem;
+}
 
 .desk {
   display: grid;

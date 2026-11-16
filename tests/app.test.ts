@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { createApp } from "../src/app/create-app";
+import type { Explainer } from "../src/engine/types";
 import { createPracticeExplainer } from "../src/engine/practice-engine";
 import { createSilentSpeech } from "../src/speech/browser-speech";
 import { memoryKv } from "../src/storage/kv";
@@ -67,7 +68,44 @@ describe("Fahim shell", () => {
     root.querySelector<HTMLTextAreaElement>("#draft")!.dispatchEvent(new Event("input"));
     root.querySelector<HTMLFormElement>("#composer-form")!.requestSubmit();
     await new Promise((resolve) => setTimeout(resolve, 30));
-    expect(root.textContent).toContain("queued");
+    const banner = root.querySelector<HTMLElement>("#queue-banner");
+    expect(banner?.hidden).toBe(false);
+    expect(banner?.textContent).toContain("Offline queue");
+    expect(banner?.textContent).toContain("not written on this device");
+    expect(banner?.textContent).toContain("City Museum");
     expect(root.querySelector("#summary-ar")?.hasAttribute("hidden")).toBe(true);
+  });
+
+  it("says Auto tried the cloud when Nano is missing and the free tier is denied", async () => {
+    document.body.innerHTML = '<div id="app"></div>';
+    const root = document.querySelector<HTMLElement>("#app")!;
+    const explainer: Explainer = {
+      kind: "firebase",
+      async prepareDevice() {
+        throw new Error("Local LanguageModel API not available in this environment.");
+      },
+      async explain() {
+        throw new Error("[403 Forbidden] The Gemini API free tier is not available for this project.");
+      },
+    };
+    createApp(root, {
+      explainer,
+      history: createMemoryHistory(),
+      queue: createMemoryQueue(),
+      speech: createSilentSpeech(),
+      settings: memoryKv(),
+      session: memoryKv(),
+      online: () => true,
+      practice: false,
+      appCheck: { ready: true, provider: "enterprise", ignoredDebugToken: false },
+    });
+    root.querySelector<HTMLButtonElement>('[data-sample="school"]')!.click();
+    root.querySelector<HTMLFormElement>("#composer-form")!.requestSubmit();
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    const error = root.querySelector("#result-error")?.textContent ?? "";
+    expect(error).toContain("free tier is not available");
+    expect(error).toContain("Do not link a billing account");
+    expect(error).toContain("Auto asked for Gemini Nano first");
+    expect(error).toContain("The cloud is unavailable");
   });
 });

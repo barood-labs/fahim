@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { classifyError } from "../src/domain/errors";
+import { classifyError, presentedFailure } from "../src/domain/errors";
 import { formatBrief } from "../src/domain/brief";
 import { readingFromSample } from "../src/samples";
 import { samples } from "../src/samples";
@@ -13,6 +13,9 @@ describe("classifyError", () => {
     expect(classifyError(new Error("App Check token is invalid"))).toBe("app_check");
     expect(classifyError(new Error("Local LanguageModel API not available in this environment."))).toBe("nano");
     expect(classifyError(new Error("Failed to fetch"))).toBe("offline");
+    expect(presentedFailure("free_tier", "prefer_on_device")).toBe("free_tier_after_device");
+    expect(presentedFailure("free_tier", "only_in_cloud")).toBe("free_tier");
+    expect(presentedFailure("nano", "only_on_device")).toBe("nano");
   });
 });
 

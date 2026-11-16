@@ -1,3 +1,5 @@
+import type { SdkMode } from "./types";
+
 export type ErrorCode =
   | "empty"
   | "too_long"
@@ -47,6 +49,16 @@ export function classifyError(error: unknown): ErrorCode {
   }
   if (message.includes("json") || message.includes("did not return")) return "parse";
   return "unknown";
+}
+
+/**
+ * Auto asks for Nano first. If that call falls through to the cloud and the
+ * project free tier is denied, keep the free-tier classification and say so.
+ * Do not turn it into a generic failure.
+ */
+export function presentedFailure(code: ErrorCode, sdkMode: SdkMode): ErrorCode | "free_tier_after_device" {
+  if (code === "free_tier" && sdkMode === "prefer_on_device") return "free_tier_after_device";
+  return code;
 }
 
 export function errorText(error: unknown): string {

@@ -45,4 +45,8 @@ Making hybrid inference visible and truthful. A bilingual translator that silent
 
 ## What’s next
 
-A hosted URL once the reCAPTCHA Enterprise site key is in place. No billing upgrade. An Android client only if the web demo is already the one we want judged.
+The site is live at https://fahim-hybridai.web.app. The reCAPTCHA Enterprise site key is already in the repo. App Check for AI Logic stays unenforced until a hosted reading returns `inferenceSource` `on_device` or `in_cloud`.
+
+Cloud `generateContent` on this Firebase project returns HTTP 403: the Gemini API free tier is not available. That is a project eligibility flag. This draft does not describe a working cloud demo. Do not link billing, upgrade to Blaze, or request quota to clear it.
+
+The on-device path is implemented and tested as routing: English prefers Nano, Arabic is refused on-device, and offline Arabic is queued. It has not been verified here on a desktop Chrome that finished the Gemini Nano download.
