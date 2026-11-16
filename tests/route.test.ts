@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { routeDocument } from "../src/domain/route";
+import { actualReason, routeDocument } from "../src/domain/route";
 import { samples } from "../src/samples";
 
 const english = samples[0].text;
@@ -35,6 +35,28 @@ describe("routeDocument", () => {
       const decision = routeDocument(item);
       if (decision.sdkMode !== "only_in_cloud") expect(decision.allowArabic).toBe(false);
     }
+  });
+
+  it("downgrades an Arabic reply request in on-device mode to English", () => {
+    const decision = routeDocument({ text: english, mode: "on_device", output: "both", online: true });
+    expect(decision.outcome).toBe("run");
+    expect(decision.sdkMode).toBe("only_on_device");
+    expect(decision.allowArabic).toBe(false);
+    expect(decision.reasonCode).toBe("downgraded_device_arabic");
+  });
+
+  it("blocks a mixed notice in on-device mode", () => {
+    const mixed = `${english}\n\n${arabic}`;
+    const decision = routeDocument({ text: mixed, mode: "on_device", output: "en", online: true });
+    expect(decision.outcome).toBe("blocked");
+    expect(decision.reasonCode).toBe("blocked_arabic_device");
+    expect(decision.allowArabic).toBe(false);
+  });
+
+  it("labels a cloud answer after Auto as a fallback, not as the plan", () => {
+    const planned = routeDocument({ text: english, mode: "auto", output: "en", online: true });
+    expect(actualReason(planned, "in_cloud")).toBe("fell_back_to_cloud");
+    expect(actualReason(planned, "on_device")).toBe("prefer_device");
   });
 
   it("blocks Arabic on-device mode", () => {

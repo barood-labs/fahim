@@ -31,9 +31,16 @@ export function shell(): string {
       <p data-i18n="offlineBanner"></p>
     </div>
     <div id="queue-banner" class="banner banner-queue" hidden>
-      <p id="queue-text"></p>
-      <button type="button" id="queue-run" data-i18n="queueRun"></button>
-      <button type="button" id="queue-dismiss" class="text-btn" data-i18n="dismiss"></button>
+      <div>
+        <p class="kicker" data-i18n="queueKicker"></p>
+        <p id="queue-text"></p>
+        <p id="queue-preview" class="queue-preview" dir="auto"></p>
+        <p class="fine" data-i18n="queueFilmNote"></p>
+      </div>
+      <div class="tool-row">
+        <button type="button" id="queue-run" data-i18n="queueRun"></button>
+        <button type="button" id="queue-dismiss" class="text-btn" data-i18n="dismiss"></button>
+      </div>
     </div>
     <main class="desk">
       <form class="sheet composer" id="composer-form">

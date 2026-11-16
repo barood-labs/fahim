@@ -42,6 +42,8 @@ Voice is `SpeechRecognition` / `webkitSpeechRecognition` and `speechSynthesis`. 
 
 ## Try it
 
+The hosted app is https://fahim-hybridai.web.app. That is the judge URL. It is a Spark Hosting site. Cloud readings on this project currently return HTTP 403 because the Gemini API free tier is not available for the project. That is not fixed in this repo.
+
 ```bash
 npm install
 npm run dev
@@ -92,28 +94,20 @@ Leave replay protection off. This app sends ordinary App Check tokens. Spark sta
 
 `localhost` is not on the Enterprise key. Local explaining still needs the debug token above. A production build does not turn debug mode on.
 
-## Judges: turn on Gemini Nano
+## Judges: on-device checklist
 
-Desktop Chrome **139 or newer**. Check `chrome://settings/help`.
+This pass did **not** run Gemini Nano. The coding environment is Linux without a desktop Chrome that has finished the Nano download. Do not treat a green CI run as proof that `inferenceSource` is `on_device`.
 
-The Firebase hybrid guide, fetched while this app was built, still says:
+On a desktop Chrome **139 or newer** (`chrome://settings/help`):
 
-1. Open `chrome://flags/#prompt-api-for-gemini-nano-multimodal-input`.
-2. Set it to **Enabled**.
-3. Restart Chrome.
+1. Rechecked 16 November 2026. The [Firebase hybrid web guide](https://firebase.google.com/docs/ai-logic/hybrid/web/get-started) still says to set `chrome://flags/#prompt-api-for-gemini-nano-multimodal-input` to **Enabled** and restart. The contest FAQ (13 November 2026) says to search `chrome://flags` for **“Gemma 4 for Built-in AI”**. Chrome’s Prompt API page says the API ships in Chrome 148 and does not name either flag. Try the Firebase flag first. If it is missing, try the FAQ name. Restart either way.
+2. Open https://fahim-hybridai.web.app. Do not add `?practice=1`. Practice mode is a local sample desk. Its badge says `not-called`. Do not film it as Firebase AI Logic.
+3. Click **Prepare on-device model**. The first download can take several minutes and starts only from that click. Wait until the status says Gemini Nano is ready.
+4. Load **School trip**, leave output on **English**, mode **Auto**, and explain. A real on-device answer has a green badge and `inferenceSource: on_device`.
+5. If Nano is missing, Auto still calls the cloud through the same SDK. On this project that call returns HTTP 403, “The Gemini API free tier is not available for this project.” The page says Auto asked for Nano first and the cloud is unavailable. It does not hang, and it does not tell you to link billing.
+6. To film the queue: DevTools offline, output **Both**, explain the English school note. A blue **Offline queue** card appears. The English reading can be on-device. Arabic is not invented.
 
-The contest FAQ on November 13, 2026 says to search `chrome://flags` for **“Gemma 4 for Built-in AI”** and enable that. If the first flag is missing in your Chrome build, use the FAQ flag. Restart either way.
-
-Then, in Fahim:
-
-1. Click **Prepare on-device model**.
-2. Wait until the status says Gemini Nano is ready. You can also watch `chrome://on-device-internals` or the DevTools console.
-3. Load the **School trip** sample, leave output on **English**, and explain. The badge should be green and `inferenceSource` should be `on_device`.
-4. Switch output to **Both**, or load the **Arabic note**. The badge should be blue and `inferenceSource` should be `in_cloud`.
-
-If Nano is missing, Auto still answers from the cloud and the badge says the SDK fell back. That is a successful hybrid outcome, not a failure of the page.
-
-Practice mode (`?practice=1`) shows the desk without a model. Do not judge practice mode as the AI. The hosted site should show **App Check · reCAPTCHA Enterprise**.
+If you only have the cloud 403, that is the current hosted behavior. It is a project eligibility flag, not an App Check switch.
 
 ## Deploy (Spark, no billing)
 
@@ -168,7 +162,8 @@ License: [Apache-2.0](LICENSE).
 
 - Arabic is not an official Gemini Nano language. Offline Arabic is queued, not generated.
 - Many judges will only hit the cloud path. The cloud reading has to be the good one. The video has to show on-device.
-- The Chrome flag name in the contest FAQ (“Gemma 4 for Built-in AI”) and the flag name in the Firebase hybrid guide (`#prompt-api-for-gemini-nano-multimodal-input`) did not match on November 13, 2026. Both are documented above. Official Rules and the Firebase guide should be rechecked before submission.
+- The Chrome flag name in the contest FAQ (“Gemma 4 for Built-in AI”) and the flag name in the Firebase hybrid guide (`#prompt-api-for-gemini-nano-multimodal-input`) still disagreed on 16 November 2026. Chrome’s Prompt API page says the API ships in Chrome 148 and does not name either flag. All three are documented above.
+- This project’s cloud `generateContent` calls return HTTP 403 because the Gemini API free tier is not available. That was not fixed in code. Do not link billing to clear it.
 - Free-tier rate limits are real. The app surfaces a 429 as a pause. It does not request more quota.
 - Arabic quality of `gemini-3.5-flash-lite` still has to be watched on the first live calls. The prompts ask for Modern Standard Arabic and forbid invented dates. If a live answer invents a deadline, that is a model failure and the caveat on the page still applies: check the original before you pay, sign, or skip a dose.
 - Enabling the reCAPTCHA Enterprise API might, in some Cloud console states, ask for a billing account even though the published quota is no-cost. If it does, do not link one.

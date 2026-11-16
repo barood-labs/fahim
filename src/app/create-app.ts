@@ -1,5 +1,5 @@
 import { formatBrief } from "../domain/brief";
-import { classifyError, type ErrorCode } from "../domain/errors";
+import { classifyError, presentedFailure, type ErrorCode } from "../domain/errors";
 import { actualReason, routeDocument } from "../domain/route";
 import { MAX_INPUT_CHARS, documentFitsOnDevice, estimateTokens } from "../domain/tokens";
 import type { OutputPreference, ReasonCode, ReplyIntent, UiLang, UserMode } from "../domain/types";
@@ -39,11 +39,12 @@ const BLOCK_KEY: Partial<Record<ReasonCode, CopyKey>> = {
   blocked_cloud_offline: "errorBlockedCloudOffline",
 };
 
-const ERROR_KEY: Record<ErrorCode, CopyKey> = {
+const ERROR_KEY: Record<ErrorCode | "free_tier_after_device", CopyKey> = {
   empty: "errorEmpty",
   too_long: "errorTooLong",
   quota: "errorQuota",
   free_tier: "errorFreeTier",
+  free_tier_after_device: "errorFreeTierAfterDevice",
   app_check: "errorAppCheck",
   nano: "errorNano",
   offline: "errorOffline",
@@ -341,7 +342,13 @@ export function createApp(root: HTMLElement, deps: AppDeps): { destroy(): void }
     $<HTMLDivElement>("#offline-banner").hidden = state.online;
     const queueBanner = $<HTMLDivElement>("#queue-banner");
     queueBanner.hidden = state.queue.length === 0 || state.queueDismissed;
-    $<HTMLParagraphElement>("#queue-text").textContent = state.draining ? t(lang, "connectionBack") : t(lang, "queueBanner");
+    const waiting = state.queue[0];
+    $<HTMLParagraphElement>("#queue-text").textContent = state.draining
+      ? `${t(lang, "connectionBack")} ${t(lang, "queueBanner")}`
+      : t(lang, "queueBanner");
+    $<HTMLParagraphElement>("#queue-preview").textContent = waiting
+      ? waiting.text.replace(/\s+/g, " ").slice(0, 180)
+      : "";
     const deviceCopy =
       state.device === "ready"
         ? "deviceReady"
@@ -541,7 +548,8 @@ export function createApp(root: HTMLElement, deps: AppDeps): { destroy(): void }
       paintedKey = "";
     } catch (error) {
       state.phase = "error";
-      state.errorKey = ERROR_KEY[classifyError(error)];
+      const code = presentedFailure(classifyError(error), decision.sdkMode);
+      state.errorKey = ERROR_KEY[code];
       if (decision.sdkMode === "only_on_device") {
         state.device = classifyError(error) === "nano" ? "missing" : "failed";
       }
